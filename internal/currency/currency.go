@@ -151,5 +151,13 @@ func (cl *CurrencyList) parse(data []byte) error {
 	}
 	cl.Rates = append(cl.Rates, rub)
 
+	for i := 0; i < len(cl.Rates)-1; i++ {
+		for j := i + 1; j < len(cl.Rates); j++ {
+			if cl.Rates[j].CharCode < cl.Rates[i].CharCode {
+				cl.Rates[j].CharCode, cl.Rates[i].CharCode = cl.Rates[i].CharCode, cl.Rates[j].CharCode
+			}
+		}
+	}
+
 	return nil
 }

@@ -1,9 +1,170 @@
+<!DOCTYPE HTML>
 <html>
     <head>
         <title>Currency Converter</title>
+        <style>
+            body {
+                background-color: #E0E0E0;
+                color: #444444;
+                padding: 20px;
+                margin: 20px;
+            }
+            div.main {
+                background-color: #FFFFFF;
+                color: #000000;
+                border-style: solid;
+                border-width: 1px;
+                border-color: #000000;
+                border-radius: 5px;
+                margin: 20px;
+                padding: 20px;
+                font-size: 16px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            p {
+                font-size: 16px;
+            }
+            img {
+                max-width: 70%;
+            }
+            a {
+                color: #409040
+            }
+            p.pubtime {
+                font-style: italic;
+            }
+            div.error {
+                text-align: center;
+                background-color: #FFFFFF;
+                border-style: solid;
+                border-width: 1px;
+                border-color: #000000;
+                border-radius: 5px;
+                margin: 20px;
+                padding: 20px;
+                font-size: 16px;
+            }
+            .error p {
+                color: #FF0000;
+            }
+            select {
+                display: block;
+                width: 300px;
+                margin: 20px;
+                padding: 5px;
+            }
+            textarea {
+                display: block;
+                width: 300px;
+                margin: 20px;
+                padding: 5px;
+                resize: none;
+                height: 50px;
+            }
+            button {
+                display: block;
+                width: 300px;
+                margin: 20px;
+                padding: 5px;
+            }
+        </style>
+        <script>
+            function ShowError(err) {
+                document.getElementById('error').style.display = '';
+                document.getElementById('errormsg').innerText = err;
+            }
+            function loadCurrencies() {
+                let xhr = new XMLHttpRequest();
+                xhr.open('GET', '/api/currency/list')
+                xhr.send();
+                xhr.onload = function() {
+                    if (xhr.status != 200) {
+                        ShowError(`HTTP Error: ${xhr.status}: ${xhr.statusText}`);
+                        return
+                    }
+                    rates = JSON.parse(xhr.response);
+                    if (rates == null) {
+                        ShowError('Bad answer from API!');
+                        return
+                    }
+                    try {
+                        let select_from = document.getElementById("from");
+                        let select_to = document.getElementById("to");
+
+                        for (i = 0; i < rates.length; i++) {
+                            var o1 = document.createElement("option");
+                            o1.value = rates[i].ISOCode;
+                            o1.text = rates[i].ISOCode + " " + rates[i].Name;
+                            select_from.add(o1);
+
+                            var o2 = document.createElement("option");
+                            o2.value = rates[i].ISOCode;
+                            o2.text = rates[i].ISOCode + " " + rates[i].Name;
+                            select_to.add(o2);
+                        }
+                    }
+                    catch (e) {
+                        ShowError(e.message)
+                    }
+                }
+            }
+            function convert() {
+                let xhr = new XMLHttpRequest();
+                let val_from = document.getElementById("from").value;
+                let val_to = document.getElementById("to").value;
+                let reqUrl = '/api/currency/convert/' + val_from + '/' + val_to; 
+                xhr.open('GET', reqUrl)
+                xhr.send();
+                xhr.onload = function() {
+                    if (xhr.status != 200) {
+                        ShowError(`HTTP Error: ${xhr.status}: ${xhr.statusText}`);
+                        return
+                    }
+                    resp = JSON.parse(xhr.response);
+                    if (rates == null) {
+                        ShowError('Bad answer from API!');
+                        return
+                    }
+                    try {
+                        if ('error' in resp) {
+                            ShowError(resp.error)
+                        }
+                        else {
+                            cr = document.getElementById("convertResult")
+                            cr.value = '1 ' + resp.from + ' = ' + resp.direct;
+                            cr.value += ' ' + resp.to + "\n";
+                            cr.value += '1 ' + resp.to + ' = ' + resp.reverse;
+                            cr.value += ' ' + resp.from + "\n";
+                        }
+                    }
+                    catch (e) {
+                        ShowError(e.message)
+                    }
+                }
+            }
+            window.addEventListener("load", loadCurrencies);
+        </script>
     </head>
     <body>
-        <p>Hello, Kitty!</p>
+        <h1>Currency converter</h1>
+        <div class="error" id="error" style="display:none">
+            <p id="errormsg"></p>
+            <p><a href="javascript:window.location.reload();">Reload page</a></p>
+        </div>
+        <div class="main">
+            <form action="#" onsubmit="javascript: return false;">
+                <select name="from" id="from">
+                </select>
+                <select name="to" id="to">
+                </select>
+                <button onclick="javascript:convert()">Convert</button>
+                <textarea id="convertResult" readonly>
+
+                </textarea>
+            </form>
+        </div>
     </body>
 <html>
 
