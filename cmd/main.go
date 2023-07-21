@@ -46,7 +46,7 @@ func webApiCurrencyList(rw http.ResponseWriter, r *http.Request) {
 		Name    string
 	}
 	var result []RateItem
-	for _, v := range rates.Rates {
+	for _, v := range rates.GetRates() {
 		var item = RateItem{
 			ISOCode: v.GetISOCode(),
 			Name:    v.GetName(),

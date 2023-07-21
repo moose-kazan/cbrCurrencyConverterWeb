@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"golang.org/x/net/html/charset"
 )
@@ -19,10 +20,12 @@ type CurrencyList struct {
 	Name    string         `xml:"name,attr"`
 	Rates   []CurrencyInfo `xml:"Valute"`
 	url     string
+	lock    sync.RWMutex
 }
 
 type CurrencyListInterface interface {
 	Convert(src string, dst string) (float64, error)
+	GetRates() []CurrencyInfo
 	Fetch(datestr string) error
 	parse(data []byte) error
 }
@@ -55,6 +58,7 @@ func (cl *CurrencyList) Convert(src string, dst string) (float64, error) {
 		return 1, nil
 	}
 
+	cl.lock.RLock()
 	var srcRate *CurrencyInfo
 	var dstRate *CurrencyInfo
 	for _, v := range cl.Rates {
@@ -70,6 +74,7 @@ func (cl *CurrencyList) Convert(src string, dst string) (float64, error) {
 			break
 		}
 	}
+	cl.lock.RUnlock()
 
 	if srcRate == nil || dstRate == nil {
 		return 0, errors.New("Unknown currencies!")
@@ -106,6 +111,12 @@ func (ci CurrencyInfo) GetName() string {
 	return ci.Name
 }
 
+func (cl *CurrencyList) GetRates() []CurrencyInfo {
+	cl.lock.RLock()
+	defer cl.lock.RUnlock()
+	return cl.Rates
+}
+
 func (cl *CurrencyList) Fetch() error {
 	req, err := http.NewRequest("GET", cl.url, nil)
 	if err != nil {
@@ -134,6 +145,8 @@ func (cl *CurrencyList) Fetch() error {
 }
 
 func (cl *CurrencyList) parse(data []byte) error {
+	cl.lock.Lock()
+	defer cl.lock.Unlock()
 	d := xml.NewDecoder(bytes.NewReader(data))
 	d.CharsetReader = charset.NewReaderLabel
 
