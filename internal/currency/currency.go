@@ -123,6 +123,7 @@ func (cl *CurrencyList) Fetch() error {
 		return err
 	}
 
+	// Кому попало родной ЦБ ставки не отдаёт
 	req.Header.Add("User-Agent", "Mozilla/5.0")
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -167,7 +168,7 @@ func (cl *CurrencyList) parse(data []byte) error {
 	for i := 0; i < len(cl.Rates)-1; i++ {
 		for j := i + 1; j < len(cl.Rates); j++ {
 			if cl.Rates[j].CharCode < cl.Rates[i].CharCode {
-				cl.Rates[j].CharCode, cl.Rates[i].CharCode = cl.Rates[i].CharCode, cl.Rates[j].CharCode
+				cl.Rates[j], cl.Rates[i] = cl.Rates[i], cl.Rates[j]
 			}
 		}
 	}

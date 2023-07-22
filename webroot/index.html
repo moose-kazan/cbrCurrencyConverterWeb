@@ -84,25 +84,30 @@
                         ShowError(`HTTP Error: ${xhr.status}: ${xhr.statusText}`);
                         return
                     }
-                    rates = JSON.parse(xhr.response);
-                    if (rates == null) {
+                    resp = JSON.parse(xhr.response);
+                    if (resp == null) {
                         ShowError('Bad answer from API!');
                         return
                     }
                     try {
-                        let select_from = document.getElementById("from");
-                        let select_to = document.getElementById("to");
+                        if ('error' in resp) {
+                            ShowError(resp.error)
+                        }
+                        else {
+                            let select_from = document.getElementById("from");
+                            let select_to = document.getElementById("to");
 
-                        for (i = 0; i < rates.length; i++) {
-                            var o1 = document.createElement("option");
-                            o1.value = rates[i].ISOCode;
-                            o1.text = rates[i].ISOCode + " " + rates[i].Name;
-                            select_from.add(o1);
+                            for (i = 0; i < resp.length; i++) {
+                                var o1 = document.createElement("option");
+                                o1.value = resp[i].ISOCode;
+                                o1.text = resp[i].ISOCode + " " + resp[i].Name;
+                                select_from.add(o1);
 
-                            var o2 = document.createElement("option");
-                            o2.value = rates[i].ISOCode;
-                            o2.text = rates[i].ISOCode + " " + rates[i].Name;
-                            select_to.add(o2);
+                                var o2 = document.createElement("option");
+                                o2.value = resp[i].ISOCode;
+                                o2.text = resp[i].ISOCode + " " + resp[i].Name;
+                                select_to.add(o2);
+                            }
                         }
                     }
                     catch (e) {
@@ -133,10 +138,10 @@
                         }
                         else {
                             cr = document.getElementById("convertResult")
-                            cr.value = '1 ' + resp.from + ' = ' + resp.direct;
-                            cr.value += ' ' + resp.to + "\n";
-                            cr.value += '1 ' + resp.to + ' = ' + resp.reverse;
+                            cr.value = '1 ' + resp.to + ' = ' + resp.direct;
                             cr.value += ' ' + resp.from + "\n";
+                            cr.value += '1 ' + resp.from + ' = ' + resp.reverse;
+                            cr.value += ' ' + resp.to + "\n";
                         }
                     }
                     catch (e) {
