@@ -1,0 +1,49 @@
+stages:
+  - build
+  - test
+  - image
+
+variables:
+  PUBLIC_REGISTRY_HOST: docker.io
+  PUBLIC_REGISTRY_OWNER: bulvinkl
+  PUBLIC_REGISTRY_APP_NAME: cbr-currency-converter
+
+build_app:
+  stage: build
+  image: golang:1.18
+  script:
+    - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./${PUBLIC_REGISTRY_APP_NAME} ./
+
+test:
+  stage: test
+  image: golang:1.18
+  script:
+    - make test
+
+lint:
+  stage: test
+  image: golang:1.18
+  script:
+    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.41.1
+    - golangci-lint --version
+    - golangci-lint run
+  allow_failure: true
+
+build_image:stable:
+  stage: image
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - make image
+  only:
+    - master
+
+build_image:latest:
+  stage: image
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - make image
+  when: manual
